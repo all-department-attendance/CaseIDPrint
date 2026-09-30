@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Case ID Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+/* Layout: top bar → 4 KPI tiles → generate | ID format → 7-day chart | last batch → history table */
+:root{
+  --bg:#f4f6fb; --panel:#ffffff; --panel-2:#f8f9fc; --ink:#1b2333; --muted:#687182; --line:#e4e8f0;
+  --blue:#2563eb; --blue-d:#1d4ed8; --blue-s:#eaf1ff;
+  --green:#0f9f6e; --green-s:#e6f6ef;
+  --violet:#7045d8; --violet-s:#f0ebfd;
+  --amber:#d97706; --amber-s:#fdf3e2;
+  --rose:#d6336c; --rose-s:#fdebf1;
+  --err:#b42318; --err-s:#fdecea;
+  --f-ui:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --shadow:0 1px 2px rgba(27,35,51,.04),0 6px 20px rgba(27,35,51,.05);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.top{background:var(--panel);border-bottom:1px solid var(--line);padding-inline:16px;padding-block:14px}
+.top .in{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--violet));display:grid;place-items:center;flex:none;color:#fff}
+.logo svg{width:22px;height:22px}
+.brand h1{font-size:1.15rem;margin:0;font-weight:800;letter-spacing:-.01em}
+.brand p{margin:0;font-size:.82rem;color:var(--muted)}
+.clock{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--green-s);color:var(--green);font-weight:600;font-size:.82rem;font-variant-numeric:tabular-nums}
+.clock i{width:8px;height:8px;border-radius:50%;background:var(--green)}
+main{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:440px){.kpis{grid-template-columns:1fr}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);min-width:0}
+.kpi .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none}
+.kpi .ic svg{width:22px;height:22px}
+.kpi .k{font-size:.78rem;color:var(--muted);font-weight:600}
+.kpi .v{font-size:1.55rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.kpi .v.sm{font-size:1.05rem;font-weight:700;letter-spacing:0}
+.c-blue .ic{background:var(--blue-s);color:var(--blue)}
+.c-green .ic{background:var(--green-s);color:var(--green)}
+.c-violet .ic{background:var(--violet-s);color:var(--violet)}
+.c-amber .ic{background:var(--amber-s);color:var(--amber)}
+.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);min-width:0;display:flex;flex-direction:column}
+.card-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.card-h h2{margin:0;font-size:1rem;font-weight:700}
+.card-h .sub{font-size:.8rem;color:var(--muted)}
+.card-b{padding:20px}
+.label{display:block;font-size:.8rem;color:var(--muted);font-weight:600;margin-bottom:8px}
+.stepper{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel-2)}
+.stepper button{border:0;background:transparent;color:var(--blue);font-size:1.4rem;font-weight:600;width:56px;cursor:pointer;font-family:var(--f-ui)}
+.stepper button:hover{background:var(--blue-s)}
+.stepper input{flex:1;min-width:0;border:0;border-inline:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center;font-family:var(--f-ui);font-size:1.8rem;font-weight:800;padding:10px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{font-family:var(--f-ui);font-weight:600;font-size:.85rem;padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.preview{margin-top:18px;padding:14px 16px;border-radius:12px;background:var(--blue-s);font-size:.85rem;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
+.preview b{font-family:var(--f-mono);font-weight:500;color:var(--ink);overflow-wrap:anywhere}
+.cta{margin-top:18px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff;border:0;border-radius:12px;padding:15px 18px;font-family:var(--f-ui);font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,.22)}
+.cta:hover{filter:brightness(1.06)}
+.cta:disabled{opacity:.6;cursor:wait}
+.cta svg{width:20px;height:20px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.msg{margin-top:14px;font-size:.88rem;padding:11px 14px;border-radius:10px;font-weight:500}
+.msg.ok{background:var(--green-s);color:#0b6b4b}
+.msg.warn{background:var(--amber-s);color:#8a4b04}
+.msg.err{background:var(--err-s);color:var(--err)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--f-mono);font-size:clamp(1.05rem,3vw,1.55rem);font-weight:600;font-variant-numeric:tabular-nums}
+.seg span{padding:4px 10px;border-radius:8px}
+.s1{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.s2{background:var(--blue-s);color:var(--blue)}
+.s3{background:var(--violet-s);color:var(--violet)}
+.s4{background:var(--amber-s);color:var(--amber)}
+.full{margin-top:12px;font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.legend{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.legend li{display:flex;gap:12px;align-items:center;font-size:.88rem}
+.legend .dot{width:10px;height:10px;border-radius:3px;flex:none}
+.legend code{font-family:var(--f-mono);font-weight:600;min-width:74px}
+.legend span{color:var(--muted)}
+.chart{padding:16px 20px 12px}
+.chart svg{width:100%;height:auto;display:block}
+.tablewrap{overflow:auto;max-height:320px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 18px;border-bottom:1px solid var(--line);font-size:.88rem;white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel-2);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+td.mono{font-family:var(--f-mono);font-size:.85rem}
+td.num,th.num{text-align:right}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--panel-2)}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--violet-s);color:var(--violet);font-weight:700;font-size:.8rem}
+.btn{font-family:var(--f-ui);font-weight:700;font-size:.84rem;border-radius:9px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn.green{background:var(--green-s);border-color:transparent;color:var(--green)}
+.btn.green:hover{filter:brightness(.97)}
+.btn.sm{padding:5px 12px;font-size:.8rem}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.range{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.empty{padding:32px 20px;text-align:center;color:var(--muted);font-size:.9rem}
+.status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-weight:700;font-size:.8rem}
+.status.done{background:var(--green-s);color:var(--green)}
+.status.pending{background:var(--amber-s);color:var(--amber)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;padding:20px;font-size:.9rem}
+.facts dt{color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-family:var(--f-mono);overflow-wrap:anywhere}
+.lock{margin:0 20px 20px;padding:12px 14px;border-radius:10px;background:var(--panel-2);border:1px dashed var(--line);font-size:.84rem;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.filters .f{display:flex;flex-direction:column;gap:4px}
+.filters label{font-size:.74rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.filters input{font-family:var(--f-ui);font-size:.88rem;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+tr.day td{cursor:pointer;font-weight:600}
+tr.day td:first-child::before{content:"▸";display:inline-block;width:16px;color:var(--blue);transition:transform .15s}
+tr.day.open td:first-child::before{transform:rotate(90deg)}
+tr.sub td{background:var(--panel-2);font-size:.84rem}
+tr.sub td:first-child{padding-left:42px;color:var(--muted)}
+tr.tot td{font-weight:800;background:var(--blue-s)}
+.bb{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--green-s);color:var(--green);font-weight:700;font-size:.8rem}
+.labelsz{margin-top:16px}
+.labelsz select{width:100%;font-family:var(--f-ui);font-size:.92rem;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+footer{text-align:center;color:var(--muted);font-size:.8rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6v12M7.5 6v12M11 6v12M14 6v12M17 6v12M20 6v12"/></svg></div>
+    <div><h1>Case ID Generator</h1><p>Date &amp; time based 18-digit Case IDs with Excel export</p></div>
+  </div>
+  <div class="clock"><i></i><span id="clock">--</span></div>
+</div></header>
+
+<main>
+  <section class="kpis">
+    <div class="kpi c-blue"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="k">Today's IDs</div><div class="v" id="kToday">0</div></div></div>
+    <div class="kpi c-green"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></div><div><div class="k">Today's Batches</div><div class="v" id="kBatches">0</div></div></div>
+    <div class="kpi c-violet"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><div><div class="k">Total IDs Generated</div><div class="v" id="kTotal">0</div></div></div>
+    <div class="kpi c-amber"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><div class="k">Last Batch</div><div class="v sm" id="kLast">—</div></div></div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-h"><h2>Generate Case IDs</h2><span class="sub">Max 9,999 per batch</span></div>
+      <form class="card-b" id="genForm" novalidate>
+        <label class="label" for="count">Number of Case IDs</label>
+        <div class="stepper">
+          <button type="button" id="minus" aria-label="Decrease">−</button>
+          <input type="number" id="count" min="1" max="9999" step="1" value="100" inputmode="numeric">
+          <button type="button" id="plus" aria-label="Increase">+</button>
+        </div>
+        <div class="chips" id="chips">
+          <button type="button" class="chip" data-v="50">50</button>
+          <button type="button" class="chip" data-v="100">100</button>
+          <button type="button" class="chip" data-v="250">250</button>
+          <button type="button" class="chip" data-v="500">500</button>
+          <button type="button" class="chip" data-v="1000">1,000</button>
+        </div>
+        <div class="preview"><span>First ID</span><b id="pvFrom"></b><span>Last ID</span><b id="pvTo"></b></div>
+        <button class="cta" id="genBtn" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          <span id="genTxt">Generate &amp; Download Excel</span>
+        </button>
+        <div id="msg" hidden></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2>Case ID Format</h2><span class="sub">18 digits</span></div>
+      <div class="card-b">
+        <div class="seg" id="segs"></div>
+        <div class="full">Next ID: <span id="fullId"></span></div>
+        <ul class="legend">
+          <li><i class="dot" style="background:var(--muted)"></i><code>00</code><span>Fixed prefix</span></li>
+          <li><i class="dot" style="background:var(--blue)"></i><code>YYMMDD</code><span>Date (year, month, day)</span></li>
+          <li><i class="dot" style="background:var(--violet)"></i><code>HHMMSS</code><span>Time of generation (hour, minute, second)</span></li>
+          <li><i class="dot" style="background:var(--amber)"></i><code>0001</code><span>Serial number within the batch</span></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-h"><h2>Last 7 Days</h2><span class="sub">Case IDs generated per day</span></div>
+      <div class="chart" id="chart"></div>
+    </section>
+
+    <section class="card" id="lastCard">
+      <div class="card-h">
+        <div><h2 id="lastTitle">Latest Batch</h2></div>
+        <span id="lastStatus"></span>
+      </div>
+      <dl class="facts" id="lastFacts" hidden>
+        <dt>Generated</dt><dd id="fAt"></dd>
+        <dt>Count</dt><dd id="fCount"></dd>
+        <dt>First ID</dt><dd id="fFrom"></dd>
+        <dt>Last ID</dt><dd id="fTo"></dd>
+      </dl>
+      <div style="padding:0 20px 16px" id="pendingWrap" hidden><button type="button" class="btn green" id="dlPending">Download pending Excel</button></div>
+      <div class="lock" id="lockNote" hidden>Each batch can be downloaded only once. Re-download is locked so the same Case IDs cannot be printed twice.</div>
+      <div class="empty" id="lastEmpty">Generate a batch to see its details here.</div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-h">
+      <div><h2>Date-wise Report</h2><span class="sub">Downloads and ID series per day · click a date to see each batch</span></div>
+      <div class="filters">
+        <div class="f"><label for="fromDate">From</label><input type="date" id="fromDate"></div>
+        <div class="f"><label for="toDate">To</label><input type="date" id="toDate"></div>
+        <button type="button" class="btn" id="clearF">All dates</button>
+        <button type="button" class="btn green" id="exportRep">Export Report</button>
+      </div>
+    </div>
+    <div class="tablewrap" id="repWrap" hidden style="max-height:480px"><table>
+      <thead><tr><th>Date</th><th class="num">Downloads</th><th class="num">Total IDs</th><th>Series From</th><th>Series To</th></tr></thead>
+      <tbody id="repBody"></tbody></table></div>
+    <div class="empty" id="repEmpty">No downloads in this period.</div>
+  </section>
+
+  <footer>Every day and every second produces a different date-time stamp, so each batch gets its own unique Case IDs. Each batch downloads only once.</footer>
+</main>
+
+<script>
+const MAXC=9999, HIST_KEEP=1000, TSKEY="caseid_last_ts_v2", HKEY="caseid_history_v2";
+const $=id=>document.getElementById(id);
+const two=n=>String(n).padStart(2,"0"), four=n=>String(n).padStart(4,"0");
+const nf=n=>n.toLocaleString("en-IN");
+let history=[];
+
+// ID = 00 + YYMMDD + HHMMSS (local time) + 4-digit serial = 18 digits
+function stamp(sec){const d=new Date(sec*1000);return two(d.getFullYear()%100)+two(d.getMonth()+1)+two(d.getDate())+two(d.getHours())+two(d.getMinutes())+two(d.getSeconds());}
+const prefixOf=sec=>"00"+stamp(sec);
+function idsFor(sec,count){const p=prefixOf(sec),o=[];for(let i=1;i<=count;i++)o.push(p+four(i));return o;}
+function lastTs(){try{return parseInt(localStorage.getItem(TSKEY)||"0",10)||0;}catch(e){return 0;}}
+const nextTs=()=>Math.max(Math.floor(Date.now()/1000),lastTs()+1);
+function load(){try{history=JSON.parse(localStorage.getItem(HKEY)||"[]");}catch(e){history=[];}}
+function showMsg(k,t){const m=$("msg");m.className="msg "+k;m.textContent=t;m.hidden=false;}
+function fmtTime(iso){return new Date(iso).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+function getCount(){const c=parseInt($("count").value,10);return Number.isInteger(c)?c:0;}
+
+function renderLive(){
+  const ts=nextTs(), s=stamp(ts), c=getCount();
+  $("segs").innerHTML=`<span class="s1">00</span><span class="s2">${s.slice(0,6)}</span><span class="s3">${s.slice(6)}</span><span class="s4">0001</span>`;
+  $("fullId").textContent=prefixOf(ts)+"0001";
+  $("pvFrom").textContent=prefixOf(ts)+"0001";
+  $("pvTo").textContent=(c>=1&&c<=MAXC)?prefixOf(ts)+four(c):"—";
+  $("clock").textContent=new Date().toLocaleString("en-IN",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+
+function renderChart(){
+  const days=[]; const now=new Date();
+  for(let i=6;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);days.push({d,key:d.toDateString(),v:0});}
+  history.forEach(b=>{const k=new Date(b.at).toDateString();const day=days.find(x=>x.key===k);if(day)day.v+=b.count;});
+  const W=560,H=220,L=44,R=12,T=16,B=34, max=Math.max(...days.map(x=>x.v));
+  const nice=v=>{if(v<=0)return 10;const p=Math.pow(10,Math.floor(Math.log10(v)));const m=v/p;return (m<=1?1:m<=2?2:m<=5?5:10)*p;};
+  const top=nice(max), bw=(W-L-R)/7;
+  let g="";
+  for(let i=0;i<=4;i++){const y=T+(H-T-B)*(1-i/4);const val=top*i/4;
+    g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e4e8f0" stroke-width="1"/>`;
+    g+=`<text x="${L-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#687182" font-family="Manrope,sans-serif">${nf(Math.round(val))}</text>`;}
+  days.forEach((x,i)=>{const h=(H-T-B)*(x.v/top), X=L+i*bw+bw*.22, w=bw*.56, y=H-B-h, isToday=i===6;
+    if(x.v>0) g+=`<rect x="${X}" y="${y}" width="${w}" height="${h}" rx="5" fill="${isToday?'#2563eb':'#b8ccf6'}"/>`;
+    if(x.v>0) g+=`<text x="${X+w/2}" y="${y-6}" text-anchor="middle" font-size="11" font-weight="700" fill="#1b2333" font-family="Manrope,sans-serif">${nf(x.v)}</text>`;
+    g+=`<text x="${X+w/2}" y="${H-12}" text-anchor="middle" font-size="11" fill="${isToday?'#2563eb':'#687182'}" font-weight="${isToday?700:500}" font-family="Manrope,sans-serif">${isToday?'Today':x.d.toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}</text>`;});
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Case IDs generated per day, last 7 days">${g}</svg>`;
+}
+
+function render(){
+  renderLive();
+  const c=getCount();
+  document.querySelectorAll(".chip").forEach(ch=>ch.setAttribute("aria-pressed",String(+ch.dataset.v===c)));
+  const today=new Date().toDateString(), todays=history.filter(b=>new Date(b.at).toDateString()===today);
+  $("kToday").textContent=nf(todays.reduce((s,b)=>s+b.count,0));
+  $("kBatches").textContent=nf(todays.length);
+  $("kTotal").textContent=nf(history.reduce((s,b)=>s+b.count,0));
+  $("kLast").textContent=history[0]?new Date(history[0].at).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"—";
+  renderReport(); renderChart(); showLast();
+}
+
+async function download(batch){
+  if(typeof ExcelJS==="undefined"){showMsg("warn","An internet connection is needed to build the Excel file. Connect and click 'Download pending Excel'.");return false;}
+  const ids=idsFor(batch.ts,batch.count), when=fmtTime(batch.at);
+  const wb=new ExcelJS.Workbook(); wb.creator="Case ID Generator"; wb.created=new Date(batch.at);
+  const HR=5;
+  const ws=wb.addWorksheet("Case IDs",{views:[{state:"frozen",ySplit:HR}],pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  ws.columns=[{width:15},{width:26},{width:28}];
+  const blue="FF2563EB", stripe="FFF3F6FC", grey="FF687182";
+  ws.mergeCells("A1:C1"); const t=ws.getCell("A1"); t.value="Case ID Report"; t.font={name:"Calibri",size:16,bold:true,color:{argb:"FF1B2333"}}; ws.getRow(1).height=28;
+  [["Generated On",when],["Total Count",ids.length],["Range",`${ids[0]}  to  ${ids[ids.length-1]}`]].forEach((m,i)=>{
+    const r=ws.getRow(2+i); if(i===2) ws.mergeCells("B4:C4");
+    r.getCell(1).value=m[0]; r.getCell(2).value=m[1];
+    r.getCell(1).font={bold:true,color:{argb:grey}}; r.getCell(2).font={bold:true,color:{argb:blue}}; r.getCell(2).alignment={horizontal:"left"};});
+  const hr=ws.getRow(HR); hr.values=["S.No","Case ID","Generated On"]; hr.height=24;
+  hr.eachCell(c=>{c.font={bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:blue}};c.alignment={horizontal:"center",vertical:"middle"};});
+  const line={style:"thin",color:{argb:"FFE4E8F0"}}, border={top:line,bottom:line,left:line,right:line};
+  ids.forEach((id,i)=>{
+    const r=ws.addRow([i+1,id,when]); r.height=20;
+    r.getCell(2).numFmt="@"; r.getCell(2).font={name:"Consolas",size:12,bold:true};
+    r.eachCell(c=>{c.alignment={horizontal:"center",vertical:"middle"};c.border=border;if(i%2===1)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:stripe}};});
+  });
+  ws.pageSetup.printTitlesRow=`${HR}:${HR}`;
+  ws.autoFilter={from:`A${HR}`,to:`C${HR+ids.length}`};
+  const buf=await wb.xlsx.writeBuffer(), d=new Date(batch.ts*1000);
+  const name=`CaseIDs_${d.getFullYear()}-${two(d.getMonth()+1)}-${two(d.getDate())}_${two(d.getHours())}${two(d.getMinutes())}${two(d.getSeconds())}_${ids.length}.xlsx`;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  return true;
+}
+
+const isDone=b=>b.downloaded!==false;
+function persist(){try{localStorage.setItem(HKEY,JSON.stringify(history.slice(0,HIST_KEEP)));}catch(e){}}
+function showLast(){
+  const b=history[0];
+  if(!b){$("lastFacts").hidden=true;$("lockNote").hidden=true;$("pendingWrap").hidden=true;$("lastEmpty").hidden=false;$("lastStatus").innerHTML="";return;}
+  $("lastEmpty").hidden=true; $("lastFacts").hidden=false;
+  $("lastTitle").textContent=`Latest Batch · ${nf(b.count)} IDs`;
+  $("fAt").textContent=fmtTime(b.at); $("fCount").textContent=nf(b.count);
+  $("fFrom").textContent=prefixOf(b.ts)+"0001"; $("fTo").textContent=prefixOf(b.ts)+four(b.count);
+  const done=isDone(b);
+  $("lastStatus").innerHTML=done?'<span class="status done">✓ Downloaded</span>':'<span class="status pending">Download pending</span>';
+  $("lockNote").hidden=!done; $("pendingWrap").hidden=done;
+}
+const dayKey=iso=>{const d=new Date(iso);return d.getFullYear()+"-"+two(d.getMonth()+1)+"-"+two(d.getDate());};
+function reportRows(){
+  const f=$("fromDate").value, t=$("toDate").value, map=new Map();
+  history.filter(isDone).forEach(b=>{const k=dayKey(b.at); if((f&&k<f)||(t&&k>t))return; if(!map.has(k))map.set(k,[]); map.get(k).push(b);});
+  return [...map.entries()].sort((x,y)=>y[0].localeCompare(x[0])).map(([k,bs])=>{bs=bs.slice().sort((x,y)=>x.ts-y.ts);
+    return {key:k,batches:bs,total:bs.reduce((s,b)=>s+b.count,0),from:prefixOf(bs[0].ts)+"0001",to:prefixOf(bs[bs.length-1].ts)+four(bs[bs.length-1].count)};});
+}
+const openDays=new Set();
+function renderReport(){
+  const rows=reportRows();
+  $("repEmpty").hidden=rows.length>0; $("repWrap").hidden=rows.length===0;
+  let html="", gB=0, gT=0;
+  rows.forEach(r=>{gB+=r.batches.length; gT+=r.total; const open=openDays.has(r.key);
+    const label=new Date(r.key+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+    html+=`<tr class="day${open?" open":""}" data-k="${r.key}"><td>${label}</td><td class="num"><span class="bb">${nf(r.batches.length)}</span></td><td class="num"><span class="badge">${nf(r.total)}</span></td><td class="mono">${r.from}</td><td class="mono">${r.to}</td></tr>`;
+    if(open) r.batches.forEach((b,i)=>{html+=`<tr class="sub"><td>Batch ${i+1} · ${new Date(b.at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</td><td class="num">1</td><td class="num">${nf(b.count)}</td><td class="mono">${prefixOf(b.ts)}0001</td><td class="mono">${prefixOf(b.ts)+four(b.count)}</td></tr>`;});
+  });
+  if(rows.length) html+=`<tr class="tot"><td>Total (${nf(rows.length)} days)</td><td class="num">${nf(gB)}</td><td class="num">${nf(gT)}</td><td></td><td></td></tr>`;
+  $("repBody").innerHTML=html;
+}
+$("repBody").addEventListener("click",e=>{const tr=e.target.closest("tr.day");if(!tr)return;const k=tr.dataset.k;openDays.has(k)?openDays.delete(k):openDays.add(k);renderReport();});
+$("fromDate").addEventListener("change",renderReport); $("toDate").addEventListener("change",renderReport);
+$("clearF").addEventListener("click",()=>{$("fromDate").value="";$("toDate").value="";renderReport();});
+$("exportRep").addEventListener("click",async()=>{
+  const rows=reportRows(); if(!rows.length){showMsg("warn","There is nothing to export for the selected dates.");return;}
+  if(typeof ExcelJS==="undefined"){showMsg("warn","An internet connection is needed to build the report.");return;}
+  const wb=new ExcelJS.Workbook(), blue="FF2563EB", line={style:"thin",color:{argb:"FFE4E8F0"}}, border={top:line,bottom:line,left:line,right:line};
+  const head=(ws,vals)=>{const r=ws.addRow(vals);r.height=22;r.eachCell(c=>{c.font={bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:blue}};c.alignment={horizontal:"center",vertical:"middle"};});};
+  const body=(r,i)=>r.eachCell(c=>{c.border=border;c.alignment={horizontal:"center"};if(i%2)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF3F6FC"}};});
+  const s1=wb.addWorksheet("Daily Summary",{views:[{state:"frozen",ySplit:1}]});
+  s1.columns=[{width:16},{width:12},{width:12},{width:24},{width:24}];
+  head(s1,["Date","Downloads","Total IDs","Series From","Series To"]);
+  rows.forEach((r,i)=>{const x=s1.addRow([r.key,r.batches.length,r.total,r.from,r.to]);x.getCell(4).numFmt="@";x.getCell(5).numFmt="@";body(x,i);});
+  const tr=s1.addRow(["Total",rows.reduce((s,r)=>s+r.batches.length,0),rows.reduce((s,r)=>s+r.total,0),"",""]);tr.font={bold:true};tr.eachCell(c=>{c.border=border;c.alignment={horizontal:"center"};});
+  const s2=wb.addWorksheet("Batch Details",{views:[{state:"frozen",ySplit:1}]});
+  s2.columns=[{width:14},{width:12},{width:10},{width:24},{width:24}];
+  head(s2,["Date","Time","Count","First ID","Last ID"]); let n=0;
+  rows.forEach(r=>r.batches.forEach(b=>{const x=s2.addRow([r.key,new Date(b.at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),b.count,prefixOf(b.ts)+"0001",prefixOf(b.ts)+four(b.count)]);x.getCell(4).numFmt="@";x.getCell(5).numFmt="@";body(x,n++);}));
+  const buf=await wb.xlsx.writeBuffer(), a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  a.download=`CaseID_Report_${rows[rows.length-1].key}_to_${rows[0].key}.xlsx`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000); showMsg("ok","Date-wise report exported. It lists series only, not printable IDs.");
+});
+async function runDownload(b){
+  $("genBtn").disabled=true; $("genTxt").textContent="Building Excel…";
+  try{
+    if(await download(b)){ b.downloaded=true; b.dlAt=new Date().toISOString(); persist(); showMsg("ok",`${nf(b.count)} Case IDs generated and downloaded. This batch is now locked and cannot be downloaded again.`); }
+  }catch(err){ showMsg("warn","The Excel file could not be built. Click 'Download pending Excel' to try once more."); }
+  finally{ $("genBtn").disabled=false; $("genTxt").textContent="Generate & Download Excel"; render(); }
+}
+$("genForm").addEventListener("submit",async e=>{
+  e.preventDefault(); load();
+  if(history[0]&&!isDone(history[0])){showMsg("warn","The previous batch has not been downloaded yet. Download it first.");render();return;}
+  const count=getCount();
+  if(count<1||count>MAXC){showMsg("err",`Enter a count between 1 and ${nf(MAXC)}.`);return;}
+  const ts=nextTs(), at=new Date(ts*1000).toISOString();
+  try{localStorage.setItem(TSKEY,String(ts));}catch(err){}
+  const b={ts,at,count,downloaded:false}; history.unshift(b); persist(); render();
+  await runDownload(b);
+});
+$("dlPending").addEventListener("click",()=>{load();const b=history[0];if(b&&!isDone(b))runDownload(b);});
+$("minus").addEventListener("click",()=>{$("count").value=Math.max(1,getCount()-1);render();});
+$("plus").addEventListener("click",()=>{$("count").value=Math.min(MAXC,getCount()+1);render();});
+$("count").addEventListener("input",render);
+$("chips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;$("count").value=c.dataset.v;render();});
+window.addEventListener("storage",e=>{if(e.key===HKEY||e.key===TSKEY){load();render();}});
+
+load(); render(); setInterval(renderLive,1000);
+</script>
+</body>
+</html>
