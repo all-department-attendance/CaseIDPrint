@@ -125,10 +125,47 @@ tr.sub td{background:var(--panel-2);font-size:.84rem}
 tr.sub td:first-child{padding-left:42px;color:var(--muted)}
 tr.tot td{font-weight:800;background:var(--blue-s)}
 .bb{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--green-s);color:var(--green);font-weight:700;font-size:.8rem}
-.labelsz{margin-top:16px}
-.labelsz select{width:100%;font-family:var(--f-ui);font-size:.92rem;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+.qs{position:relative}
+.qs form{display:flex;align-items:center;gap:8px;height:36px;padding:0 6px 0 12px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);width:250px;transition:width .2s,border-color .2s,box-shadow .2s}
+.qs form:focus-within{width:300px;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-s);background:var(--panel)}
+.qs svg{width:16px;height:16px;color:var(--muted);flex:none}
+.qs input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-family:var(--f-mono);font-size:.84rem;font-weight:600;outline:none}
+.qs input::placeholder{font-family:var(--f-ui);font-weight:500;color:var(--muted)}
+.qs kbd{font-family:var(--f-ui);font-size:.7rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:var(--panel)}
+.pop{position:absolute;right:0;top:44px;width:340px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(27,35,51,.14);z-index:20;overflow:hidden}
+.pop .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:700;font-size:.85rem}
+.pop.ok .ph{background:var(--green-s);color:#0b6b4b}
+.pop.no .ph{background:var(--err-s);color:var(--err)}
+.pop .ph b{margin-left:auto;font-family:var(--f-mono);font-weight:600;font-size:.78rem;opacity:.8}
+.pop dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0;padding:12px 14px;font-size:.82rem}
+.pop dt{color:var(--muted);font-weight:600}
+.pop dd{margin:0;font-family:var(--f-mono);font-size:.78rem;overflow-wrap:anywhere}
+.pop p{margin:0;padding:12px 14px;font-size:.82rem}
+.pop .pos{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--violet-s);color:var(--violet);font-weight:700;font-family:var(--f-ui)}
+@media (max-width:700px){.qs{width:100%}.qs form,.qs form:focus-within{width:100%}.pop{left:0;right:auto;width:100%}}
 footer{text-align:center;color:var(--muted);font-size:.8rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.conn{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-weight:700;font-size:.82rem}
+.conn i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.conn.on{background:var(--green-s);color:var(--green)}
+.conn.off{background:var(--err-s);color:var(--err)}
+.conn.wait{background:var(--amber-s);color:var(--amber)}
+.topr{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.setup{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.setup{grid-template-columns:1fr}}
+.setup .f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.setup .f.wide{grid-column:1/-1}
+.setup input{font-family:var(--f-mono);font-size:.88rem;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--ink);width:100%}
+.steps{margin:0 0 16px;padding-left:20px;color:var(--muted);font-size:.88rem;display:flex;flex-direction:column;gap:4px;max-width:80ch}
+.steps b{color:var(--ink)}
+.pend{padding:0 20px 16px;display:flex;flex-direction:column;gap:8px}
+.pend .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;background:var(--amber-s)}
+.pend .row span{font-family:var(--f-mono);font-size:.82rem}
+details.card>summary{list-style:none;cursor:pointer}
+details.card>summary::-webkit-details-marker{display:none}
+details.card[open]>summary{border-bottom:1px solid var(--line)}
+details.card:not([open])>summary{border-bottom:0}
+.chev{color:var(--muted);font-size:.85rem}
 </style>
 </head>
 <body>
@@ -137,7 +174,18 @@ footer{text-align:center;color:var(--muted);font-size:.8rem}
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6v12M7.5 6v12M11 6v12M14 6v12M17 6v12M20 6v12"/></svg></div>
     <div><h1>Case ID Generator</h1><p>Date &amp; time based 18-digit Case IDs with Excel export</p></div>
   </div>
-  <div class="clock"><i></i><span id="clock">--</span></div>
+  <div class="topr">
+    <div class="qs" id="qs">
+      <form id="searchForm" novalidate role="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="40" placeholder="Search Case ID" aria-label="Search Case ID">
+        <kbd>/</kbd>
+      </form>
+      <div class="pop" id="searchRes" hidden></div>
+    </div>
+    <div class="conn wait" id="conn"><i></i><span id="connTxt">Not connected</span></div>
+    <div class="clock"><i></i><span id="clock">--</span></div>
+  </div>
 </div></header>
 
 <main>
@@ -166,7 +214,7 @@ footer{text-align:center;color:var(--muted);font-size:.8rem}
           <button type="button" class="chip" data-v="1000">1,000</button>
         </div>
         <div class="preview"><span>First ID</span><b id="pvFrom"></b><span>Last ID</span><b id="pvTo"></b></div>
-        <button class="cta" id="genBtn" type="submit">
+        <button class="cta" id="genBtn" type="submit" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
           <span id="genTxt">Generate &amp; Download Excel</span>
         </button>
@@ -175,14 +223,14 @@ footer{text-align:center;color:var(--muted);font-size:.8rem}
     </section>
 
     <section class="card">
-      <div class="card-h"><h2>Case ID Format</h2><span class="sub">18 digits</span></div>
+      <div class="card-h"><h2>Case ID Format</h2><span class="sub">18 digits · India time</span></div>
       <div class="card-b">
         <div class="seg" id="segs"></div>
-        <div class="full">Next ID: <span id="fullId"></span></div>
+        <div class="full">Approx. next ID: <span id="fullId"></span></div>
         <ul class="legend">
           <li><i class="dot" style="background:var(--muted)"></i><code>00</code><span>Fixed prefix</span></li>
           <li><i class="dot" style="background:var(--blue)"></i><code>YYMMDD</code><span>Date (year, month, day)</span></li>
-          <li><i class="dot" style="background:var(--violet)"></i><code>HHMMSS</code><span>Time of generation (hour, minute, second)</span></li>
+          <li><i class="dot" style="background:var(--violet)"></i><code>HHMMSS</code><span>Time the database reserved the batch</span></li>
           <li><i class="dot" style="background:var(--amber)"></i><code>0001</code><span>Serial number within the batch</span></li>
         </ul>
       </div>
@@ -191,7 +239,7 @@ footer{text-align:center;color:var(--muted);font-size:.8rem}
 
   <div class="grid">
     <section class="card">
-      <div class="card-h"><h2>Last 7 Days</h2><span class="sub">Case IDs generated per day</span></div>
+      <div class="card-h"><h2>Last 7 Days</h2><span class="sub">Case IDs downloaded per day</span></div>
       <div class="chart" id="chart"></div>
     </section>
 
@@ -206,15 +254,15 @@ footer{text-align:center;color:var(--muted);font-size:.8rem}
         <dt>First ID</dt><dd id="fFrom"></dd>
         <dt>Last ID</dt><dd id="fTo"></dd>
       </dl>
-      <div style="padding:0 20px 16px" id="pendingWrap" hidden><button type="button" class="btn green" id="dlPending">Download pending Excel</button></div>
-      <div class="lock" id="lockNote" hidden>Each batch can be downloaded only once. Re-download is locked so the same Case IDs cannot be printed twice.</div>
+      <div class="pend" id="pendList" hidden></div>
+      <div class="lock" id="lockNote" hidden>Each batch can be downloaded only once, from any computer. Re-download is locked in the database so the same Case IDs cannot be printed twice.</div>
       <div class="empty" id="lastEmpty">Generate a batch to see its details here.</div>
     </section>
   </div>
 
   <section class="card">
     <div class="card-h">
-      <div><h2>Date-wise Report</h2><span class="sub">Downloads and ID series per day · click a date to see each batch</span></div>
+      <div><h2>Date-wise Report</h2><span class="sub">Downloads and ID series per day, from all computers · click a date to see each batch</span></div>
       <div class="filters">
         <div class="f"><label for="fromDate">From</label><input type="date" id="fromDate"></div>
         <div class="f"><label for="toDate">To</label><input type="date" id="toDate"></div>
@@ -228,70 +276,99 @@ footer{text-align:center;color:var(--muted);font-size:.8rem}
     <div class="empty" id="repEmpty">No downloads in this period.</div>
   </section>
 
-  <footer>Every day and every second produces a different date-time stamp, so each batch gets its own unique Case IDs. Each batch downloads only once.</footer>
+  <footer>Batches are reserved by the database, so every computer gets its own unique Case IDs even in the same second. Each batch downloads only once.</footer>
 </main>
 
 <script>
-const MAXC=9999, HIST_KEEP=1000, TSKEY="caseid_last_ts_v2", HKEY="caseid_history_v2";
+const MAXC=9999, CFGKEY="caseid_sb_cfg_v1";
 const $=id=>document.getElementById(id);
 const two=n=>String(n).padStart(2,"0"), four=n=>String(n).padStart(4,"0");
-const nf=n=>n.toLocaleString("en-IN");
-let history=[];
+const nf=n=>Number(n).toLocaleString("en-IN");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// Pre-configured project (anon key is the public browser key; safe to ship in this file)
+const DEFAULT_URL="https://cyjbbawsndmycwmfhpmw.supabase.co";
+const DEFAULT_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5amJiYXdzbmRteWN3bWZocG13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NDYyNTgsImV4cCI6MjEwNjMyMjI1OH0.cQs5FMYoIvXN7zpYTNs-zu7ThP4ilF1Jl4MgubmazN0";
+const cfg={url:DEFAULT_URL,key:DEFAULT_KEY,by:null};
+let history=[], connected=false, busy=false;
 
-// ID = 00 + YYMMDD + HHMMSS (local time) + 4-digit serial = 18 digits
-function stamp(sec){const d=new Date(sec*1000);return two(d.getFullYear()%100)+two(d.getMonth()+1)+two(d.getDate())+two(d.getHours())+two(d.getMinutes())+two(d.getSeconds());}
-const prefixOf=sec=>"00"+stamp(sec);
-function idsFor(sec,count){const p=prefixOf(sec),o=[];for(let i=1;i<=count;i++)o.push(p+four(i));return o;}
-function lastTs(){try{return parseInt(localStorage.getItem(TSKEY)||"0",10)||0;}catch(e){return 0;}}
-const nextTs=()=>Math.max(Math.floor(Date.now()/1000),lastTs()+1);
-function load(){try{history=JSON.parse(localStorage.getItem(HKEY)||"[]");}catch(e){history=[];}}
+// ---------- Supabase (REST RPC, no library needed) ----------
+async function rpc(fn,args){
+  const h={"apikey":cfg.key,"Content-Type":"application/json","Accept":"application/json"};
+  if(cfg.key.startsWith("eyJ")) h["Authorization"]="Bearer "+cfg.key;
+  let r;
+  try{ r=await fetch(cfg.url.replace(/\/+$/,"")+"/rest/v1/rpc/"+fn,{method:"POST",headers:h,body:JSON.stringify(args||{})}); }
+  catch(e){ throw {kind:"network",message:"Could not reach Supabase. Check the internet connection and the Project URL."}; }
+  const txt=await r.text(); let data=null; try{data=txt?JSON.parse(txt):null;}catch(e){}
+  if(!r.ok){
+    const m=(data&&(data.message||data.hint))||("HTTP "+r.status);
+    if(r.status===401||r.status===403) throw {kind:"auth",message:"The key was rejected. Paste the anon / publishable key from Project Settings → API."};
+    if(r.status===404||/Could not find the function/i.test(m)) throw {kind:"setup",message:"Setup not found. Run caseid_supabase_setup.sql in the Supabase SQL Editor first."};
+    throw {kind:"server",message:m};
+  }
+  return data;
+}
+const norm=b=>({...b, ts:Number(b.ts), count:Number(b.count), at:new Date(Number(b.ts)*1000).toISOString()});
+async function refresh(){
+  if(!cfg.url||!cfg.key){setConn("off","Not connected");return false;}
+  try{ const rows=await rpc("caseid_list",{p_limit:5000}); history=(rows||[]).map(norm); setConn("on","Connected"); render(); return true; }
+  catch(e){ setConn("off","Not connected"); showMsg("err",e.message); return false; }
+}
+function setConn(state,text){
+  connected=state==="on"; $("conn").className="conn "+state; $("connTxt").textContent=text;
+  $("genBtn").disabled=!connected||busy;
+}
+
+// ---------- helpers ----------
 function showMsg(k,t){const m=$("msg");m.className="msg "+k;m.textContent=t;m.hidden=false;}
-function fmtTime(iso){return new Date(iso).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+function fmtTime(iso){return new Date(iso).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+function istParts(sec){const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata",year:"2-digit",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date(sec*1000));const g=t=>p.find(x=>x.type===t).value;return {s:g("year")+g("month")+g("day")+(g("hour")==="24"?"00":g("hour"))+g("minute")+g("second"),key:"20"+g("year")+"-"+g("month")+"-"+g("day")};}
+const dayKey=b=>istParts(b.ts).key;
+const firstId=b=>b.prefix+"0001", lastId=b=>b.prefix+four(b.count);
+function idsOf(b){const o=[];for(let i=1;i<=b.count;i++)o.push(b.prefix+four(i));return o;}
 function getCount(){const c=parseInt($("count").value,10);return Number.isInteger(c)?c:0;}
+const isDone=b=>b.downloaded===true;
 
 function renderLive(){
-  const ts=nextTs(), s=stamp(ts), c=getCount();
+  const s=istParts(Math.floor(Date.now()/1000)).s, c=getCount();
   $("segs").innerHTML=`<span class="s1">00</span><span class="s2">${s.slice(0,6)}</span><span class="s3">${s.slice(6)}</span><span class="s4">0001</span>`;
-  $("fullId").textContent=prefixOf(ts)+"0001";
-  $("pvFrom").textContent=prefixOf(ts)+"0001";
-  $("pvTo").textContent=(c>=1&&c<=MAXC)?prefixOf(ts)+four(c):"—";
-  $("clock").textContent=new Date().toLocaleString("en-IN",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("fullId").textContent="00"+s+"0001";
+  $("pvFrom").textContent="00"+s+"0001";
+  $("pvTo").textContent=(c>=1&&c<=MAXC)?"00"+s+four(c):"—";
+  $("clock").textContent=new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});
 }
 
 function renderChart(){
-  const days=[]; const now=new Date();
-  for(let i=6;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);days.push({d,key:d.toDateString(),v:0});}
-  history.forEach(b=>{const k=new Date(b.at).toDateString();const day=days.find(x=>x.key===k);if(day)day.v+=b.count;});
+  const days=[], now=Date.now();
+  for(let i=6;i>=0;i--){const sec=Math.floor(now/1000)-i*86400;days.push({key:istParts(sec).key,sec,v:0});}
+  history.filter(isDone).forEach(b=>{const d=days.find(x=>x.key===dayKey(b));if(d)d.v+=b.count;});
   const W=560,H=220,L=44,R=12,T=16,B=34, max=Math.max(...days.map(x=>x.v));
   const nice=v=>{if(v<=0)return 10;const p=Math.pow(10,Math.floor(Math.log10(v)));const m=v/p;return (m<=1?1:m<=2?2:m<=5?5:10)*p;};
-  const top=nice(max), bw=(W-L-R)/7;
-  let g="";
-  for(let i=0;i<=4;i++){const y=T+(H-T-B)*(1-i/4);const val=top*i/4;
+  const top=nice(max), bw=(W-L-R)/7; let g="";
+  for(let i=0;i<=4;i++){const y=T+(H-T-B)*(1-i/4);
     g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e4e8f0" stroke-width="1"/>`;
-    g+=`<text x="${L-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#687182" font-family="Manrope,sans-serif">${nf(Math.round(val))}</text>`;}
-  days.forEach((x,i)=>{const h=(H-T-B)*(x.v/top), X=L+i*bw+bw*.22, w=bw*.56, y=H-B-h, isToday=i===6;
-    if(x.v>0) g+=`<rect x="${X}" y="${y}" width="${w}" height="${h}" rx="5" fill="${isToday?'#2563eb':'#b8ccf6'}"/>`;
-    if(x.v>0) g+=`<text x="${X+w/2}" y="${y-6}" text-anchor="middle" font-size="11" font-weight="700" fill="#1b2333" font-family="Manrope,sans-serif">${nf(x.v)}</text>`;
-    g+=`<text x="${X+w/2}" y="${H-12}" text-anchor="middle" font-size="11" fill="${isToday?'#2563eb':'#687182'}" font-weight="${isToday?700:500}" font-family="Manrope,sans-serif">${isToday?'Today':x.d.toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}</text>`;});
-  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Case IDs generated per day, last 7 days">${g}</svg>`;
+    g+=`<text x="${L-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#687182" font-family="Manrope,sans-serif">${nf(Math.round(top*i/4))}</text>`;}
+  days.forEach((x,i)=>{const h=(H-T-B)*(x.v/top), X=L+i*bw+bw*.22, w=bw*.56, y=H-B-h, today=i===6;
+    if(x.v>0) g+=`<rect x="${X}" y="${y}" width="${w}" height="${h}" rx="5" fill="${today?'#2563eb':'#b8ccf6'}"/><text x="${X+w/2}" y="${y-6}" text-anchor="middle" font-size="11" font-weight="700" fill="#1b2333" font-family="Manrope,sans-serif">${nf(x.v)}</text>`;
+    g+=`<text x="${X+w/2}" y="${H-12}" text-anchor="middle" font-size="11" fill="${today?'#2563eb':'#687182'}" font-weight="${today?700:500}" font-family="Manrope,sans-serif">${today?'Today':new Date(x.sec*1000).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short"})}</text>`;});
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Case IDs downloaded per day, last 7 days">${g}</svg>`;
 }
 
 function render(){
   renderLive();
   const c=getCount();
   document.querySelectorAll(".chip").forEach(ch=>ch.setAttribute("aria-pressed",String(+ch.dataset.v===c)));
-  const today=new Date().toDateString(), todays=history.filter(b=>new Date(b.at).toDateString()===today);
+  const tk=istParts(Math.floor(Date.now()/1000)).key, done=history.filter(isDone), todays=done.filter(b=>dayKey(b)===tk);
   $("kToday").textContent=nf(todays.reduce((s,b)=>s+b.count,0));
   $("kBatches").textContent=nf(todays.length);
-  $("kTotal").textContent=nf(history.reduce((s,b)=>s+b.count,0));
-  $("kLast").textContent=history[0]?new Date(history[0].at).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"—";
+  $("kTotal").textContent=nf(done.reduce((s,b)=>s+b.count,0));
+  $("kLast").textContent=history[0]?new Date(history[0].at).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"—";
   renderReport(); renderChart(); showLast();
 }
 
-async function download(batch){
-  if(typeof ExcelJS==="undefined"){showMsg("warn","An internet connection is needed to build the Excel file. Connect and click 'Download pending Excel'.");return false;}
-  const ids=idsFor(batch.ts,batch.count), when=fmtTime(batch.at);
-  const wb=new ExcelJS.Workbook(); wb.creator="Case ID Generator"; wb.created=new Date(batch.at);
+// ---------- Excel ----------
+async function buildExcel(b){
+  const ids=idsOf(b), when=fmtTime(b.at);
+  const wb=new ExcelJS.Workbook(); wb.creator="Case ID Generator"; wb.created=new Date(b.at);
   const HR=5;
   const ws=wb.addWorksheet("Case IDs",{views:[{state:"frozen",ySplit:HR}],pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
   ws.columns=[{width:15},{width:26},{width:28}];
@@ -304,39 +381,58 @@ async function download(batch){
   const hr=ws.getRow(HR); hr.values=["S.No","Case ID","Generated On"]; hr.height=24;
   hr.eachCell(c=>{c.font={bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:blue}};c.alignment={horizontal:"center",vertical:"middle"};});
   const line={style:"thin",color:{argb:"FFE4E8F0"}}, border={top:line,bottom:line,left:line,right:line};
-  ids.forEach((id,i)=>{
-    const r=ws.addRow([i+1,id,when]); r.height=20;
+  ids.forEach((id,i)=>{const r=ws.addRow([i+1,id,when]); r.height=20;
     r.getCell(2).numFmt="@"; r.getCell(2).font={name:"Consolas",size:12,bold:true};
-    r.eachCell(c=>{c.alignment={horizontal:"center",vertical:"middle"};c.border=border;if(i%2===1)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:stripe}};});
-  });
+    r.eachCell(c=>{c.alignment={horizontal:"center",vertical:"middle"};c.border=border;if(i%2===1)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:stripe}};});});
   ws.pageSetup.printTitlesRow=`${HR}:${HR}`;
   ws.autoFilter={from:`A${HR}`,to:`C${HR+ids.length}`};
-  const buf=await wb.xlsx.writeBuffer(), d=new Date(batch.ts*1000);
-  const name=`CaseIDs_${d.getFullYear()}-${two(d.getMonth()+1)}-${two(d.getDate())}_${two(d.getHours())}${two(d.getMinutes())}${two(d.getSeconds())}_${ids.length}.xlsx`;
+  return await wb.xlsx.writeBuffer();
+}
+function saveFile(buf,name){
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})); a.download=name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+// Build the file first, then claim the one-time download in the database, then save.
+async function claimAndDownload(b){
+  if(typeof ExcelJS==="undefined"){showMsg("warn","An internet connection is needed to build the Excel file. The batch is saved as pending; download it once you are online.");return false;}
+  const buf=await buildExcel(b);
+  const res=await rpc("caseid_claim_download",{p_id:b.id,p_by:cfg.by||null});
+  const claimed=Array.isArray(res)?res[0]:res;
+  if(!claimed||claimed.id==null){showMsg("err","This batch was already downloaded (maybe from another computer). It cannot be downloaded again.");return false;}
+  const p=istParts(b.ts).s;
+  saveFile(buf,`CaseIDs_20${p.slice(0,2)}-${p.slice(2,4)}-${p.slice(4,6)}_${p.slice(6)}_${b.count}.xlsx`);
   return true;
 }
 
-const isDone=b=>b.downloaded!==false;
-function persist(){try{localStorage.setItem(HKEY,JSON.stringify(history.slice(0,HIST_KEEP)));}catch(e){}}
+// ---------- latest batch / pending ----------
 function showLast(){
   const b=history[0];
-  if(!b){$("lastFacts").hidden=true;$("lockNote").hidden=true;$("pendingWrap").hidden=true;$("lastEmpty").hidden=false;$("lastStatus").innerHTML="";return;}
+  if(!b){["lastFacts","lockNote","pendList"].forEach(i=>$(i).hidden=true);$("lastEmpty").hidden=false;$("lastStatus").innerHTML="";return;}
   $("lastEmpty").hidden=true; $("lastFacts").hidden=false;
   $("lastTitle").textContent=`Latest Batch · ${nf(b.count)} IDs`;
   $("fAt").textContent=fmtTime(b.at); $("fCount").textContent=nf(b.count);
-  $("fFrom").textContent=prefixOf(b.ts)+"0001"; $("fTo").textContent=prefixOf(b.ts)+four(b.count);
-  const done=isDone(b);
-  $("lastStatus").innerHTML=done?'<span class="status done">✓ Downloaded</span>':'<span class="status pending">Download pending</span>';
-  $("lockNote").hidden=!done; $("pendingWrap").hidden=done;
+  $("fFrom").textContent=firstId(b); $("fTo").textContent=lastId(b);
+  $("lastStatus").innerHTML=isDone(b)?'<span class="status done">✓ Downloaded</span>':'<span class="status pending">Download pending</span>';
+  const pend=history.filter(x=>!isDone(x)).slice(0,10);
+  $("pendList").hidden=pend.length===0;
+  $("pendList").innerHTML=pend.map(x=>`<div class="row"><span>${esc(fmtTime(x.at))} · ${nf(x.count)} IDs · ${firstId(x)}</span><button type="button" class="btn sm green" data-p="${x.id}">Download pending</button></div>`).join("");
+  $("lockNote").hidden=pend.length>0;
 }
-const dayKey=iso=>{const d=new Date(iso);return d.getFullYear()+"-"+two(d.getMonth()+1)+"-"+two(d.getDate());};
+$("pendList").addEventListener("click",async e=>{
+  const btn=e.target.closest("button[data-p]"); if(!btn||busy)return;
+  const b=history.find(x=>String(x.id)===btn.dataset.p); if(!b)return;
+  busy=true; btn.disabled=true;
+  try{ if(await claimAndDownload(b)) showMsg("ok",`Pending batch downloaded (${nf(b.count)} IDs). It is now locked.`); }
+  catch(err){ showMsg("err",err.message||"Download failed."); }
+  finally{ busy=false; await refresh(); }
+});
+
+// ---------- report ----------
 function reportRows(){
   const f=$("fromDate").value, t=$("toDate").value, map=new Map();
-  history.filter(isDone).forEach(b=>{const k=dayKey(b.at); if((f&&k<f)||(t&&k>t))return; if(!map.has(k))map.set(k,[]); map.get(k).push(b);});
+  history.filter(isDone).forEach(b=>{const k=dayKey(b); if((f&&k<f)||(t&&k>t))return; if(!map.has(k))map.set(k,[]); map.get(k).push(b);});
   return [...map.entries()].sort((x,y)=>y[0].localeCompare(x[0])).map(([k,bs])=>{bs=bs.slice().sort((x,y)=>x.ts-y.ts);
-    return {key:k,batches:bs,total:bs.reduce((s,b)=>s+b.count,0),from:prefixOf(bs[0].ts)+"0001",to:prefixOf(bs[bs.length-1].ts)+four(bs[bs.length-1].count)};});
+    return {key:k,batches:bs,total:bs.reduce((s,b)=>s+b.count,0),from:firstId(bs[0]),to:lastId(bs[bs.length-1])};});
 }
 const openDays=new Set();
 function renderReport(){
@@ -346,7 +442,7 @@ function renderReport(){
   rows.forEach(r=>{gB+=r.batches.length; gT+=r.total; const open=openDays.has(r.key);
     const label=new Date(r.key+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
     html+=`<tr class="day${open?" open":""}" data-k="${r.key}"><td>${label}</td><td class="num"><span class="bb">${nf(r.batches.length)}</span></td><td class="num"><span class="badge">${nf(r.total)}</span></td><td class="mono">${r.from}</td><td class="mono">${r.to}</td></tr>`;
-    if(open) r.batches.forEach((b,i)=>{html+=`<tr class="sub"><td>Batch ${i+1} · ${new Date(b.at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</td><td class="num">1</td><td class="num">${nf(b.count)}</td><td class="mono">${prefixOf(b.ts)}0001</td><td class="mono">${prefixOf(b.ts)+four(b.count)}</td></tr>`;});
+    if(open) r.batches.forEach((b,i)=>{html+=`<tr class="sub"><td>Batch ${i+1} · ${new Date(b.at).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",second:"2-digit"})}</td><td class="num">1</td><td class="num">${nf(b.count)}</td><td class="mono">${firstId(b)}</td><td class="mono">${lastId(b)}</td></tr>`;});
   });
   if(rows.length) html+=`<tr class="tot"><td>Total (${nf(rows.length)} days)</td><td class="num">${nf(gB)}</td><td class="num">${nf(gT)}</td><td></td><td></td></tr>`;
   $("repBody").innerHTML=html;
@@ -361,44 +457,74 @@ $("exportRep").addEventListener("click",async()=>{
   const head=(ws,vals)=>{const r=ws.addRow(vals);r.height=22;r.eachCell(c=>{c.font={bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:blue}};c.alignment={horizontal:"center",vertical:"middle"};});};
   const body=(r,i)=>r.eachCell(c=>{c.border=border;c.alignment={horizontal:"center"};if(i%2)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF3F6FC"}};});
   const s1=wb.addWorksheet("Daily Summary",{views:[{state:"frozen",ySplit:1}]});
-  s1.columns=[{width:16},{width:12},{width:12},{width:24},{width:24}];
+  s1.columns=[{width:14},{width:12},{width:12},{width:24},{width:24}];
   head(s1,["Date","Downloads","Total IDs","Series From","Series To"]);
   rows.forEach((r,i)=>{const x=s1.addRow([r.key,r.batches.length,r.total,r.from,r.to]);x.getCell(4).numFmt="@";x.getCell(5).numFmt="@";body(x,i);});
   const tr=s1.addRow(["Total",rows.reduce((s,r)=>s+r.batches.length,0),rows.reduce((s,r)=>s+r.total,0),"",""]);tr.font={bold:true};tr.eachCell(c=>{c.border=border;c.alignment={horizontal:"center"};});
   const s2=wb.addWorksheet("Batch Details",{views:[{state:"frozen",ySplit:1}]});
   s2.columns=[{width:14},{width:12},{width:10},{width:24},{width:24}];
   head(s2,["Date","Time","Count","First ID","Last ID"]); let n=0;
-  rows.forEach(r=>r.batches.forEach(b=>{const x=s2.addRow([r.key,new Date(b.at).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),b.count,prefixOf(b.ts)+"0001",prefixOf(b.ts)+four(b.count)]);x.getCell(4).numFmt="@";x.getCell(5).numFmt="@";body(x,n++);}));
-  const buf=await wb.xlsx.writeBuffer(), a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
-  a.download=`CaseID_Report_${rows[rows.length-1].key}_to_${rows[0].key}.xlsx`; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000); showMsg("ok","Date-wise report exported. It lists series only, not printable IDs.");
+  rows.forEach(r=>r.batches.forEach(b=>{const x=s2.addRow([r.key,new Date(b.at).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",second:"2-digit"}),b.count,firstId(b),lastId(b)]);x.getCell(4).numFmt="@";x.getCell(5).numFmt="@";body(x,n++);}));
+  saveFile(await wb.xlsx.writeBuffer(),`CaseID_Report_${rows[rows.length-1].key}_to_${rows[0].key}.xlsx`);
+  showMsg("ok","Date-wise report exported. It lists series only, not printable IDs.");
 });
-async function runDownload(b){
-  $("genBtn").disabled=true; $("genTxt").textContent="Building Excel…";
-  try{
-    if(await download(b)){ b.downloaded=true; b.dlAt=new Date().toISOString(); persist(); showMsg("ok",`${nf(b.count)} Case IDs generated and downloaded. This batch is now locked and cannot be downloaded again.`); }
-  }catch(err){ showMsg("warn","The Excel file could not be built. Click 'Download pending Excel' to try once more."); }
-  finally{ $("genBtn").disabled=false; $("genTxt").textContent="Generate & Download Excel"; render(); }
+
+
+// ---------- search ----------
+function searchId(raw){
+  const q=String(raw||"").replace(/\D/g,""), out=$("searchRes");
+  if(!q){out.hidden=true;return;}
+  out.hidden=false;
+  const no=(t,msg)=>{out.className="pop no";out.innerHTML=`<div class="ph">✕ ${esc(t)}</div><p>${msg}</p>`;};
+  if(q.length!==18||!q.startsWith("00")) return no("Invalid Case ID",`Needs 18 digits starting with 00 (entered ${q.length}).`);
+  if(!connected) return no("Not connected","Reload the page once the database is connected.");
+  const prefix=q.slice(0,14), serial=parseInt(q.slice(14),10), b=history.find(x=>x.prefix===prefix);
+  if(!b||serial<1||serial>b.count) return no("Not found",`${esc(q)} was never generated by this tool.`);
+  const day=history.filter(x=>isDone(x)&&dayKey(x)===dayKey(b)).sort((x,y)=>x.ts-y.ts), n=day.findIndex(x=>x.id===b.id);
+  out.className="pop ok";
+  out.innerHTML=`<div class="ph">✓ Valid Case ID <b>${isDone(b)?"Printed":"Pending"}</b></div><dl>
+    <dt>Date</dt><dd>${esc(fmtTime(b.at))}</dd>
+    <dt>Series</dt><dd>${firstId(b)}<br>→ ${lastId(b)}</dd>
+    <dt>Position</dt><dd><span class="pos">${nf(serial)} / ${nf(b.count)}</span></dd>${n>=0?`<dt>Batch</dt><dd>${n+1} of ${day.length} that day</dd>`:""}
+  </dl>`;
 }
+$("searchForm").addEventListener("submit",e=>{e.preventDefault();searchId($("q").value);$("q").select();});
+$("q").addEventListener("input",()=>{const d=$("q").value.replace(/\D/g,"");if(d.length>=18)searchId(d);else $("searchRes").hidden=true;});
+document.addEventListener("click",e=>{if(!$("qs").contains(e.target))$("searchRes").hidden=true;});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){$("searchRes").hidden=true;$("q").blur();}
+  if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$("q").focus();}
+});
+
+// ---------- generate ----------
 $("genForm").addEventListener("submit",async e=>{
-  e.preventDefault(); load();
-  if(history[0]&&!isDone(history[0])){showMsg("warn","The previous batch has not been downloaded yet. Download it first.");render();return;}
+  e.preventDefault(); if(busy)return;
+  if(!connected){showMsg("err","Not connected to the database. Check the internet connection, then reload the page.");return;}
   const count=getCount();
   if(count<1||count>MAXC){showMsg("err",`Enter a count between 1 and ${nf(MAXC)}.`);return;}
-  const ts=nextTs(), at=new Date(ts*1000).toISOString();
-  try{localStorage.setItem(TSKEY,String(ts));}catch(err){}
-  const b={ts,at,count,downloaded:false}; history.unshift(b); persist(); render();
-  await runDownload(b);
+  if(typeof ExcelJS==="undefined"){showMsg("warn","An internet connection is needed to build the Excel file.");return;}
+  busy=true; $("genBtn").disabled=true; $("genTxt").textContent="Reserving IDs…";
+  let b=null;
+  try{
+    const res=await rpc("caseid_reserve",{p_count:count,p_by:cfg.by||null});
+    b=norm(Array.isArray(res)?res[0]:res);
+    history.unshift(b); render();
+    $("genTxt").textContent="Building Excel…";
+    if(await claimAndDownload(b)) showMsg("ok",`${nf(count)} Case IDs generated and downloaded (${firstId(b)} to ${lastId(b)}). This batch is now locked.`);
+  }catch(err){
+    showMsg(b?"warn":"err", b?`IDs were reserved but the download did not finish: ${err.message||"error"}. Use 'Download pending' to get it.`:(err.message||"Could not reserve IDs. Nothing was generated."));
+  }finally{ busy=false; $("genTxt").textContent="Generate & Download Excel"; await refresh(); }
 });
-$("dlPending").addEventListener("click",()=>{load();const b=history[0];if(b&&!isDone(b))runDownload(b);});
+
+// ---------- controls ----------
 $("minus").addEventListener("click",()=>{$("count").value=Math.max(1,getCount()-1);render();});
 $("plus").addEventListener("click",()=>{$("count").value=Math.min(MAXC,getCount()+1);render();});
 $("count").addEventListener("input",render);
 $("chips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;$("count").value=c.dataset.v;render();});
-window.addEventListener("storage",e=>{if(e.key===HKEY||e.key===TSKEY){load();render();}});
-
-load(); render(); setInterval(renderLive,1000);
+// ---------- start ----------
+render(); setConn("wait","Connecting…"); refresh();
+setInterval(renderLive,1000);
+setInterval(()=>{ if(connected&&!busy&&document.visibilityState==="visible") refresh(); },30000);
 </script>
 </body>
 </html>
